@@ -1,0 +1,3 @@
+[submodule "BDFireToWebsocket"]
+	path = BDFireToWebsocket
+	url = https://github.com/pinapelz/BDFireToWebsocket
