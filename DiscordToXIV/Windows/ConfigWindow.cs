@@ -13,14 +13,17 @@ public class ConfigWindow : Window, IDisposable
 
     public ConfigWindow(Plugin plugin) : base("DiscordToXIV Config###DiscordToXIVConfig")
     {
+        SizeConstraints = new WindowSizeConstraints
+        {
+            MinimumSize = new Vector2(500, 350),
+            MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
+        };
         Configuration = plugin.Configuration;
     }
 
     public void Dispose() { }
 public override void Draw()
 {
-    // Existing code for checkboxes...
-
     ImGui.Spacing();
 
     if (ImGui.BeginTable("ChannelMappingsTable", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
@@ -39,12 +42,9 @@ public override void Draw()
         {
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
-
-            // Declare variables at the top of the loop
             string channelId = key;
             string channelName = Configuration.ChannelMappings[key];
-
-            // Input for Channel ID
+            
             ImGui.SetNextItemWidth(-1);
             if (ImGui.InputText($"##ChannelID_{index}", ref channelId, 256))
             {
@@ -60,17 +60,15 @@ public override void Draw()
                 }
                 else
                 {
-                    // Update the key in the dictionary
                     Configuration.ChannelMappings.Remove(key);
                     Configuration.ChannelMappings[channelId] = channelName;
                     Configuration.Save();
-                    break; // Exit the loop to avoid enumeration issues
+                    break;
                 }
             }
 
             ImGui.TableNextColumn();
 
-            // Input for Channel Name
             ImGui.SetNextItemWidth(-1);
             if (ImGui.InputText($"##ChannelName_{index}", ref channelName, 256))
             {
@@ -88,7 +86,6 @@ public override void Draw()
 
             ImGui.TableNextColumn();
 
-            // Delete button
             if (ImGui.Button($"Delete##{index}"))
             {
                 keyToRemove = key;
@@ -128,6 +125,84 @@ public override void Draw()
         Configuration.HideUsernameWhenNicknameExists = hideUsernameWhenNicknameExists;
         Configuration.Save();
     }
+    
+    var showOnlyKnownChannels =  Configuration.ShowOnlyKnownChannels;
+    if(ImGui.Checkbox("Show only known channels", ref showOnlyKnownChannels))
+    {
+        Configuration.ShowOnlyKnownChannels = showOnlyKnownChannels;
+        Configuration.Save();
+    }
+    
+    var adjustEmoteText = Configuration.AdjustEmoteText;
+    if(ImGui.Checkbox("Fix Emotes", ref adjustEmoteText))
+    {
+        Configuration.AdjustEmoteText = adjustEmoteText;
+        Configuration.Save();
+    }
+    if (ImGui.IsItemHovered())
+    {
+        ImGui.BeginTooltip();
+        ImGui.Text("Detects when an emote is used and adjusts the text to make it more readable");
+        ImGui.EndTooltip();
+    }
+    
+    ImGui.SameLine();
+
+    var adjustMentionsText = Configuration.AdjustMentions;
+    if (ImGui.Checkbox("Fix Mentions", ref adjustEmoteText))
+    {
+        Configuration.AdjustMentions = adjustMentionsText;
+        Configuration.Save();
+    }
+    if (ImGui.IsItemHovered())
+    {
+        ImGui.BeginTooltip();
+        ImGui.Text("Replaces mention User ID with name instead");
+        ImGui.EndTooltip();
+    }
+    
+    var hideWelcomeMessage = Configuration.HideWelcomeMessage;
+    if (ImGui.Checkbox("Hide welcome message", ref hideWelcomeMessage))
+    {
+        Configuration.HideWelcomeMessage = hideWelcomeMessage;
+        Configuration.Save();
+    }
+    if (ImGui.IsItemHovered())
+    {
+        ImGui.BeginTooltip();
+        ImGui.Text("Hides plugin's welcome chat message");
+        ImGui.EndTooltip();
+    }
+
+    var hideAttachmentUrls = Configuration.HideAttachmentUrls;
+    if (ImGui.Checkbox("Hide attachment URLs", ref hideAttachmentUrls))
+    {
+        Configuration.HideAttachmentUrls = hideAttachmentUrls;
+        Configuration.Save();
+    }
+    if (ImGui.IsItemHovered())
+    {
+        ImGui.BeginTooltip();
+        ImGui.Text("Hides URLs of attachments in chat");
+        ImGui.EndTooltip();
+    }
+    
+    ImGui.SameLine();
+    
+    var hideStickerUrls = Configuration.HideStickerUrls;
+    if (ImGui.Checkbox("Hide sticker URLs", ref hideStickerUrls))
+    {
+        Configuration.HideStickerUrls = hideStickerUrls;
+        Configuration.Save();
+    }
+    if (ImGui.IsItemHovered())
+    {
+        ImGui.BeginTooltip();
+        ImGui.Text("Hides URLs of stickers in chat");
+        ImGui.EndTooltip();
+    }
+
+
 }
 
 }
