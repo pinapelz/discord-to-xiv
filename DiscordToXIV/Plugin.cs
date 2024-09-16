@@ -7,48 +7,14 @@ using Dalamud.Plugin.Services;
 using System.Collections.Generic;
 using System.Threading;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using DiscordToXIV.Windows;
-
+using DiscordTOXIV.Windows;
 
 
 namespace DiscordToXIV;
-
-
-public class Message
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-    [JsonPropertyName("author")]
-    public string? Author { get; init; }
-
-    [JsonPropertyName("author_name")]
-    public string? AuthorName { get; init; }
-
-    [JsonPropertyName("nickname")]
-    public string? Nickname { get; init; }
-
-    [JsonPropertyName("content")]
-    public string? Content { get; init; }
-
-    [JsonPropertyName("time")]
-    public string? Time { get; init; }
-
-    [JsonPropertyName("channel")]
-    public string? Channel { get; init; }
-    
-    [JsonPropertyName("sticker_id")]
-    public string? StickerId { get; init; }
-    
-    [JsonPropertyName("sticker_name")]
-    public string? StickerName { get; init; }
-
-    [JsonIgnore]
-    public string? ChannelName { get; set; }
-}
 
 
 public sealed class Plugin : IDalamudPlugin
@@ -64,16 +30,14 @@ public sealed class Plugin : IDalamudPlugin
 
     private const string CommandName = "/pdiscordtoxiv";
     private const int DefaultPort = 8765;
+    private bool IsWebSocketServerRunning = false;
 
     private WebSocketServer webSocketServer;
     private readonly CancellationTokenSource cancellationTokenSource;
     private readonly List<IWebSocketConnection> connectedClients;
-    private readonly HashSet<string> recentMessages = new HashSet<string>();
-    private readonly Queue<string> messageQueue = new Queue<string>();
-    private const int MaxRecentMessages = 100;
-    private readonly object messageLock = new object();
     public Configuration Configuration { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
+    private MainWindow MainWindow { get; init; }
     public readonly WindowSystem WindowSystem = new("DiscordToXIV");
     
 
@@ -81,7 +45,9 @@ public sealed class Plugin : IDalamudPlugin
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         ConfigWindow = new ConfigWindow(this);
+        MainWindow = new MainWindow(this);
         WindowSystem.AddWindow(ConfigWindow);
+        WindowSystem.AddWindow(MainWindow);
         cancellationTokenSource = new CancellationTokenSource();
         connectedClients = new List<IWebSocketConnection>();
 
@@ -91,7 +57,9 @@ public sealed class Plugin : IDalamudPlugin
         });
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
-        ChatGui.Print("Plugin starting...");
+        PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
+        if(!Configuration.HideWelcomeMessage)
+            ChatGui.Print("[DiscordToXIV] Websocket Server Ready! Use /pdiscordtoxiv <port> to start the server (Need help? /pdiscordtoxiv help)");
     }
 
     public void Dispose()
@@ -108,123 +76,158 @@ public sealed class Plugin : IDalamudPlugin
             if(args == "stop")
             {
                 StopWebSocketServer();
-                ChatGui.Print("WebSocket server stop requested");
-                return;
+                ChatGui.Print("[DiscordToXIV] WebSocket server stop requested");
             }
-            if (!int.TryParse(args, out port) || port <= 0 || port > 65535)
+            else if (args == "start")
             {
-                ChatGui.PrintError($"Invalid port number: {args}. Using default port {DefaultPort}.");
-                port = DefaultPort;
+                ChatGui.Print("[DiscordToXIV] Starting WebSocket server with default port " + DefaultPort);
+                StartWebSocketServer(DefaultPort);
             }
+            else if (args == "help")
+                ToggleMainUI();
+            else if(args == "config")
+                ToggleConfigUI();
+            else if (!int.TryParse(args, out port) || port <= 0 || port > 65535)
+            {
+                ChatGui.PrintError($"[DiscordToXIV] Invalid port number: {args}. Using default port {DefaultPort}.");
+                StartWebSocketServer(DefaultPort);
+            }
+            else
+            {
+                ToggleMainUI(); 
+            }
+            return;
+        }
+        
+        // No args provided
+        if (!IsWebSocketServerRunning)
+        {
+            ChatGui.Print("[DiscordToXIV] Starting WebSocket server with default port " + DefaultPort);
+            StartWebSocketServer(DefaultPort);
+        }
+        else
+        {
+            ChatGui.Print("[DiscordToXIV] Stopping WebSocket server...");
+            StopWebSocketServer();
         }
 
-        StartWebSocketServer(port);
-        ChatGui.Print($"WebSocket server started on port {port}");
     }
 
-private void StartWebSocketServer(int port)
-{
-    StopWebSocketServer();
-
-    webSocketServer = new WebSocketServer($"ws://0.0.0.0:{port}");
-
-    webSocketServer.Start(socket =>
+    private void StartWebSocketServer(int port)
     {
-        socket.OnOpen = () =>
+        StopWebSocketServer();
+        IsWebSocketServerRunning = true;
+        webSocketServer = new WebSocketServer($"ws://0.0.0.0:{port}");
+        webSocketServer.Start(socket =>
         {
-            PluginLog.Information("WebSocket connection opened.");
-            connectedClients.Add(socket);
-        };
-
-        socket.OnClose = () =>
-        {
-            PluginLog.Information("WebSocket connection closed.");
-            connectedClients.Remove(socket);
-        };
-
-        socket.OnMessage = message =>
-        {
-            try
+            socket.OnOpen = () =>
             {
-                var receivedMessage = JsonSerializer.Deserialize<Message>(message);
+                PluginLog.Information("[DiscordToXIV] WebSocket connection opened.");
+                ChatGui.Print("[DiscordToXIV] Connected to BetterDiscord Relayer!");
+                connectedClients.Add(socket);
+            };
 
-                if (receivedMessage == null || string.IsNullOrEmpty(receivedMessage.Id))
-                {
-                    PluginLog.Error("Received message without an ID.");
-                    return;
-                }
+            socket.OnClose = () =>
+            {
+                PluginLog.Information("[DiscordToXIV] WebSocket connection closed.");
+                ChatGui.Print("[DiscordToXIV] Disconnected from BetterDiscord Relayer!");
+                connectedClients.Remove(socket);
+            };
 
-                lock (messageLock)
+            socket.OnMessage = message =>
+            {
+                try
                 {
-                    if (recentMessages.Contains(receivedMessage.Id))
+                    var receivedMessage = JsonSerializer.Deserialize<Message>(message);
+
+                    if (receivedMessage == null || string.IsNullOrEmpty(receivedMessage.Id))
                     {
-                        PluginLog.Information("Duplicate message detected by ID, skipping.");
+                        PluginLog.Error("Received message without an ID.");
                         return;
                     }
+                    
 
-                    recentMessages.Add(receivedMessage.Id);
-                    messageQueue.Enqueue(receivedMessage.Id);
-
-                    if (messageQueue.Count > MaxRecentMessages)
+                    var seString = new SeString(new List<Payload>());
+                    var name = receivedMessage.Author;
+                    ushort nameColor = (ushort)ChatUtils.GetNameColor(name, this.nameColor);
+                    if (receivedMessage.Nickname != null)
                     {
-                        string oldMessageId = messageQueue.Dequeue();
-                        recentMessages.Remove(oldMessageId);
+                        if (!Configuration.HideUsernameWhenNicknameExists)
+                            name = $"{receivedMessage.Nickname} ({receivedMessage.AuthorName})";
+                        else
+                            name = receivedMessage.Nickname;
                     }
-                }
-                var seString = new SeString(new List<Payload>());
-                var name = receivedMessage.Author;
-                ushort nameColor = (ushort)GetNameColor(name);
-                if (receivedMessage.Nickname != null)
-                {
-                    if (!Configuration.HideUsernameWhenNicknameExists)
-                        name = $"{receivedMessage.Nickname} ({receivedMessage.AuthorName})";
+                    else if (receivedMessage.AuthorName != null)
+                    {
+                        name = receivedMessage.AuthorName;
+                    }   
+                    
+                    if(Configuration.ChannelMappings.TryGetValue(receivedMessage.Channel, out var channelName))
+                        receivedMessage.ChannelName = channelName;
                     else
-                        name = receivedMessage.Nickname;
-                }
-                else if (receivedMessage.AuthorName != null)
-                {
-                    name = receivedMessage.AuthorName;
-                }
+                    {
+                        if (Configuration.ShowOnlyKnownChannels) return;
+                        receivedMessage.ChannelName = receivedMessage.Channel;
+                    }
 
-                receivedMessage.ChannelName = Configuration.ChannelMappings.TryGetValue(receivedMessage.Channel, out var channelName)
-                    ? channelName
-                    : receivedMessage.Channel;
-
-                seString.Append(new UIForegroundPayload(35));
-                seString.Append($"[{receivedMessage.ChannelName}] ");
-                seString.Append(UIForegroundPayload.UIForegroundOff);
-                seString.Append(new UIForegroundPayload(nameColor));
-                seString.Append(name);
-                seString.Append(UIForegroundPayload.UIForegroundOff);
-                seString.Append(new UIForegroundPayload(1));
-                seString.Append($": {receivedMessage.Content}");
-                var stickerData = "";
-                if (receivedMessage.StickerId != null)
-                    stickerData = $" [{receivedMessage.StickerName}](https://media.discordapp.net/stickers/{receivedMessage.StickerId}.webp?size=160&quality=lossless)";
-                if(stickerData == "" && receivedMessage.Content == null)
-                    return;
-                if (stickerData != "")
-                {
+                    seString.Append(new UIForegroundPayload(56));
+                    seString.Append($"[{receivedMessage.ChannelName}] ");
+                    seString.Append(UIForegroundPayload.UIForegroundOff);
+                    seString.Append(new UIForegroundPayload(nameColor));
+                    seString.Append(name);
+                    seString.Append(UIForegroundPayload.UIForegroundOff);
+                    seString.Append(new UIForegroundPayload(1));
+                    var messageContent = receivedMessage.Content;
+                    if (Configuration.AdjustEmoteText)
+                        messageContent = ChatUtils.FixEmoteText(messageContent);
+                    if (Configuration.AdjustMentions)
+                        messageContent = ChatUtils.ReplaceMentionsWithNames(messageContent, receivedMessage.Mentions);
+                    seString.Append($": {messageContent}");
+                    var stickerData = "";
+                    if (receivedMessage.StickerId != null)
+                        if (!Configuration.HideStickerUrls)
+                        {
+                            stickerData = $" [{receivedMessage.StickerName}](https://media.discordapp.net/stickers/{receivedMessage.StickerId}.webp?size=160&quality=lossless)";
+                        }
+                        else
+                        {
+                            stickerData = $" [{receivedMessage.StickerName}]";
+                        }
+                    var attachments = receivedMessage.Attachments;
+                    if (attachments != null)
+                    {
+                        foreach (var attachment in attachments)
+                        {
+                            seString.Append(new UIForegroundPayload(25));
+                            if (!Configuration.HideAttachmentUrls)
+                            {
+                                seString.Append($"\nAttachment:\n[{attachment.Filename}]({attachment.Url})");
+                            }
+                            else
+                            {
+                                seString.Append($"\nAttachment:\n{attachment.Filename}");
+                            }
+                            seString.Append(UIForegroundPayload.UIForegroundOff);
+                        }
+                    }
                     seString.Append(new UIForegroundPayload(25));
                     seString.Append(stickerData);
+                    if(stickerData == "" && receivedMessage.Content == null) return;
+                    seString.Append(UIForegroundPayload.UIForegroundOff);
+                    ChatGui.Print(seString);
                 }
-                seString.Append(UIForegroundPayload.UIForegroundOff);
-
-                ChatGui.Print(seString);
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error($"Failed to process message: {ex.Message}");
-            }
-        };
-    });
-}
-
-
+                catch (Exception ex)
+                {
+                    PluginLog.Error($"Failed to process message: {ex.Message}");
+                }
+            };
+        });
+    }
     private void StopWebSocketServer()
     {
         if (webSocketServer != null)
         {
+            IsWebSocketServerRunning = false;
             PluginLog.Information("Stopping WebSocket server...");
 
             foreach (var socket in connectedClients)
@@ -241,11 +244,8 @@ private void StartWebSocketServer(int port)
         }
     }
     
-    private int GetNameColor(string name)
-    {
-        var index = Math.Abs(name.GetHashCode()) % nameColor.Length;
-        return nameColor[index];
-    }
+
     public void ToggleConfigUI() => ConfigWindow.Toggle();
+    public void ToggleMainUI() => MainWindow.Toggle();
     private void DrawUI() => WindowSystem.Draw();
 }
