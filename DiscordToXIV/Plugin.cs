@@ -64,7 +64,7 @@ public sealed class Plugin : IDalamudPlugin
             HelpMessage = "Set a channel ID to send messages to. Usage: /pdtxset <channel_id>"
         });
         
-        CommandManager.AddHandler("/pdtxs", new CommandInfo(SendMessageCommand)
+        CommandManager.AddHandler("/pdtxsend", new CommandInfo(SendMessageCommand)
         {
             HelpMessage = "Send a message to the selected channel. Usage: /pdtxs <message>"
         });

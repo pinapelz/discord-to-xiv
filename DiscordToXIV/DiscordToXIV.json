@@ -1,8 +1,8 @@
 {
   "Author": "pinapelz",
   "Name": "DiscordToXIV",
-  "Punchline": "A short one-liner that shows up in /xlplugins.",
-  "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
+  "Punchline": "Receive/Send Discord messages from FFXIV.",
+  "Description": "XIVToDiscord? Why not DiscordToXIV. This plugin allows you to bring Discord messages into FFXIV and send text from FFXIV to Discord!\n**Requires BetterDiscord**",
   "ApplicableVersion": "any",
   "Tags": [
     "sample",
