@@ -17,6 +17,7 @@ public class Configuration : IPluginConfiguration
     public bool HideWelcomeMessage { get; set; } = false;
     public bool HideAttachmentUrls { get; set; } = false;
     public bool HideStickerUrls { get; set; } = false;
+    public string DiscordAuthToken { get; set; } = "";
 
     public void Save()
     {

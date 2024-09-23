@@ -33,6 +33,8 @@ public sealed class Plugin : IDalamudPlugin
     private bool IsWebSocketServerRunning = false;
 
     private WebSocketServer webSocketServer;
+    private DiscordMessenger discordMessenger;
+    private string selectedChannelID = "";
     private readonly CancellationTokenSource cancellationTokenSource;
     private readonly List<IWebSocketConnection> connectedClients;
     public Configuration Configuration { get; init; }
@@ -50,11 +52,24 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.AddWindow(MainWindow);
         cancellationTokenSource = new CancellationTokenSource();
         connectedClients = new List<IWebSocketConnection>();
+        discordMessenger = new DiscordMessenger(this, Configuration.DiscordAuthToken);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "Start WebSocket server. Usage: /pdiscordtoxiv [port]"
         });
+        
+        CommandManager.AddHandler("/pdtxset", new CommandInfo(SetChannelCommand)
+        {
+            HelpMessage = "Set a channel ID to send messages to. Usage: /pdtxset <channel_id>"
+        });
+        
+        CommandManager.AddHandler("/pdtxs", new CommandInfo(SendMessageCommand)
+        {
+            HelpMessage = "Send a message to the selected channel. Usage: /pdtxs <message>"
+        });
+        
+        
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
@@ -111,6 +126,42 @@ public sealed class Plugin : IDalamudPlugin
             StopWebSocketServer();
         }
 
+    }
+    
+    private void SendMessageCommand(string command, string args)
+    {
+        if (string.IsNullOrEmpty(args))
+        {
+            ChatGui.PrintError("[DiscordToXIV] No message provided.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(selectedChannelID))
+        {
+            ChatGui.PrintError("[DiscordToXIV] No channel selected.");
+            return;
+        }
+
+        discordMessenger.SendMessageAsync(args, selectedChannelID);
+    }
+    
+    private void SetChannelCommand(string command, string args)
+    {
+        if (string.IsNullOrEmpty(args))
+        {
+            ChatGui.PrintError("[DiscordToXIV] No channel ID provided.");
+            return;
+        }
+
+        if (Configuration.ChannelMappings.ContainsKey(args))
+        {
+            selectedChannelID = args;
+            ChatGui.Print("[DiscordToXIV] Channel set to " + Configuration.ChannelMappings[args]);
+        }
+        else
+        {
+            ChatGui.PrintError("[DiscordToXIV] Channel ID not found in configuration.");
+        }
     }
 
     private void StartWebSocketServer(int port)

@@ -201,6 +201,14 @@ public override void Draw()
         ImGui.Text("Hides URLs of stickers in chat");
         ImGui.EndTooltip();
     }
+    
+    ImGui.Text("Your Discord Auth Token is required if you wish to send messages");
+    var discordAuthToken = Configuration.DiscordAuthToken;
+    if (ImGui.InputText("Discord Auth Token", ref discordAuthToken, 256))
+    {
+        Configuration.DiscordAuthToken = discordAuthToken;
+        Configuration.Save();
+    }
 
 
 }
