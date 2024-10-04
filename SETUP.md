@@ -16,15 +16,13 @@ This plugin requires a Discord client with BetterDiscord so that Dalamud can com
 
 Install the BDFireToWebsocket plugin. This is required so Dalamud knows when you get a new message. Download the .js file from the link below and put it in your BetterDiscord plugins folder. You can access this in your BetterDiscord client by going to Settings -> Plugins -> Open Plugin Folder.
 
+[BDFireToWebsocket Plugin](https://github.com/pinapelz/BDFireToWebsocket/blob/7b2752d529cf3c6b5115c200aeb7b6f684ce807b/BDFireToWebsocket.plugin.js)
+
 ![image.png](https://i.postimg.cc/Zqkjqx6z/image.png)
 
 [![image.png](https://i.postimg.cc/dtrjxTzW/image.png)](https://postimg.cc/ppVj9yV8)
 
 ![image3.png](https://i.postimg.cc/xC1mjXpS/image.png)
-
-[BDFireToWebsocket Plugin](https://github.com/pinapelz/BDFireToWebsocket/blob/7b2752d529cf3c6b5115c200aeb7b6f684ce807b/BDFireToWebsocket.plugin.js)
-
-
 
 ---
 
