@@ -5,8 +5,6 @@
   "Description": "XIVToDiscord? Why not DiscordToXIV. This plugin allows you to bring Discord messages into FFXIV and send text from FFXIV to Discord!\n**Requires BetterDiscord**",
   "ApplicableVersion": "any",
   "Tags": [
-    "sample",
-    "plugin",
-    "goats"
+      "discord"
   ]
 }
