@@ -17,8 +17,11 @@ This plugin requires a Discord client with BetterDiscord so that Dalamud can com
 Install the BDFireToWebsocket plugin. This is required so Dalamud knows when you get a new message. Download the .js file from the link below and put it in your BetterDiscord plugins folder. You can access this in your BetterDiscord client by going to Settings -> Plugins -> Open Plugin Folder.
 
 ![image.png](https://i.postimg.cc/Zqkjqx6z/image.png)
-![image.png](https://i.postimg.cc/xdSyQTS0/image.png)
-[![image.png](https://i.postimg.cc/xC1mjXpS/image.png)](https://postimg.cc/1gbXJ3ZW)
+
+[![image.png](https://i.postimg.cc/dtrjxTzW/image.png)](https://postimg.cc/ppVj9yV8)
+
+![image3.png](https://i.postimg.cc/xC1mjXpS/image.png)
+
 [BDFireToWebsocket Plugin](https://github.com/pinapelz/BDFireToWebsocket/blob/7b2752d529cf3c6b5115c200aeb7b6f684ce807b/BDFireToWebsocket.plugin.js)
 
 
@@ -29,9 +32,13 @@ Install the BDFireToWebsocket plugin. This is required so Dalamud knows when you
 
 Click on the settings icon for the BDFireToWebsocket plugin in BetterDiscord in the plugins menu.
 
-- For Websocket address, you can leave it as the default unless you know what you're doing.
-- **Channel IDs** controls which messages are sent to Dalamud. I suggest leaving this empty and then filtering which channels you want from the Dalamud plugin instead.
-- Make sure to add your own **User ID** so that messages you send get filtered out! (Otherwise, you'll see your own messages in-game). You can get your User ID by right-clicking on your name anywhere in Discord and clicking 'Copy ID'.
+**Websocket Address:**, you can leave it as the default unless you know what you're doing.
+
+**Channel IDs:** controls which messages are sent to Dalamud. I suggest leaving this empty and then filtering which channels you want from the Dalamud plugin instead.
+
+**User ID:** Add your own User ID so that messages you send get filtered out! (Otherwise, you'll see your own messages in-game)
+
+You can get your User ID by right-clicking on your name anywhere in Discord and clicking 'Copy ID'
 
 [![image.png](https://i.postimg.cc/qq96GjJk/image.png)](https://postimg.cc/zHFfzwHM)
 
