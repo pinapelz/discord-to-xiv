@@ -1,12 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.Numerics;
-using Dalamud.Interface.Internal;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
 using DiscordToXIV;
-using FFXIVClientStructs.FFXIV.Component.Shell;
 using ImGuiNET;
 
 namespace DiscordTOXIV.Windows;

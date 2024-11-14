@@ -12,7 +12,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Fleck" Version="1.0.13" />
+        <PackageReference Include="Fleck" Version="1.2.0" />
+        <PackageReference Update="DalamudPackager" Version="11.0.0" />
     </ItemGroup>
 
 </Project>
