@@ -38,7 +38,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly CancellationTokenSource cancellationTokenSource;
     private readonly List<IWebSocketConnection> connectedClients;
     public Configuration Configuration { get; init; }
-    private ConfigWindow ConfigWindow { get; init; }
+    public ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
     public readonly WindowSystem WindowSystem = new("DiscordToXIV");
     

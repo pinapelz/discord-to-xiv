@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
 using DiscordToXIV;
+using DiscordToXIV.Windows;
 using ImGuiNET;
 
 namespace DiscordTOXIV.Windows;
@@ -37,6 +38,12 @@ public class MainWindow : Window, IDisposable
                 UseShellExecute = true,
             });
         }
+        ImGui.SameLine();
+        if (ImGui.Button("Configuration"))
+        {
+            Plugin.ConfigWindow.Toggle();
+        }
+            
         
         ImGui.Spacing();
         ImGui.Separator();
@@ -64,7 +71,7 @@ public class MainWindow : Window, IDisposable
         ImGui.Text("You can access this in your BetterDiscord client by going to Settings -> Plugins -> Open Plugin Folder");
         if (ImGui.Button("BDFireToWebsocket Plugin"))
         {
-            Process.Start(new ProcessStartInfo("https://github.com/pinapelz/BDFireToWebsocket/blob/7b2752d529cf3c6b5115c200aeb7b6f684ce807b/BDFireToWebsocket.plugin.js")
+            Process.Start(new ProcessStartInfo("https://github.com/pinapelz/BDFireToWebsocket/releases/latest/download/BDFireToWebsocket.plugin.js")
             {
                 UseShellExecute = true,
             });
@@ -75,7 +82,7 @@ public class MainWindow : Window, IDisposable
         ImGui.SetWindowFontScale(1.2f);
         ImGui.Text("3. Configure BDFireToWebsocket Plugin");
         ImGui.SetWindowFontScale(1.0f);
-        ImGui.Text("Click on the settings icon for the BDFireToWebsocket plugin in BetterDiscord in the plugins menu");
+        ImGui.Text("Turn the plugin on and click on the settings icon for the BDFireToWebsocket plugin in BetterDiscord in the plugins menu");
         ImGui.Spacing();
         ImGui.Text("For Websocket address you can leave it as the default unless you know what you're doing");
         ImGui.Spacing();
