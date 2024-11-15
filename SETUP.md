@@ -28,7 +28,7 @@ Install the BDFireToWebsocket plugin. This is required so Dalamud knows when you
 
 ## 3. Configure BDFireToWebsocket Plugin
 
-Click on the settings icon for the BDFireToWebsocket plugin in BetterDiscord in the plugins menu.
+Turn the plugin on and click on the settings icon for the BDFireToWebsocket plugin in BetterDiscord in the plugins menu.
 
 **Websocket Address:**, you can leave it as the default unless you know what you're doing.
 
