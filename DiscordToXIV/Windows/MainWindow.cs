@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
 using DiscordToXIV;
+using Dalamud.Bindings.ImGui;
 using DiscordToXIV.Windows;
-using ImGuiNET;
 
 namespace DiscordTOXIV.Windows;
 
