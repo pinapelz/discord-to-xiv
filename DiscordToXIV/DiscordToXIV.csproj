@@ -12,7 +12,7 @@
 
     <ItemGroup>
         <PackageReference Include="Fleck" Version="1.2.0" />
-        <PackageReference Update="DalamudPackager" Version="14.0.1" />
+        <PackageReference Update="DalamudPackager" Version="15.0.0" />
         <PackageReference Update="DotNet.ReproducibleBuilds" Version="1.2.39" />
     </ItemGroup>
 
